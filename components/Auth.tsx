@@ -110,6 +110,17 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         {/* LEFT PANEL: INTERACTIVE VISUALIZATION */}
         <div className="hidden lg:flex lg:w-[55%] relative z-10 flex-col justify-center items-center p-12">
              
+             {/* TEXTO EN CABECERA (MOVIDO ARRIBA) */}
+             <div className="mb-12 text-center max-w-xl z-20">
+                 <h1 className="text-5xl font-black text-slate-800 tracking-tight mb-4 leading-tight">
+                     Todo tu negocio <br/>
+                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-indigo-600">en una sola pantalla.</span>
+                 </h1>
+                 <p className="text-slate-500 text-lg font-medium">
+                     Sin complicaciones técnicas. Entra, vende y crece.
+                 </p>
+             </div>
+
              {/* THE "LIVE SYSTEM" MOCKUP */}
              <div className="relative w-full max-w-lg aspect-square">
                 
@@ -170,16 +181,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                         <p className="font-black text-slate-800">+ 24% Hoy</p>
                     </div>
                 </div>
-             </div>
-
-             <div className="mt-12 text-center max-w-md z-20">
-                 <h1 className="text-5xl font-black text-slate-800 tracking-tight mb-4 leading-tight">
-                     Todo tu negocio <br/>
-                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-indigo-600">en una sola pantalla.</span>
-                 </h1>
-                 <p className="text-slate-500 text-lg font-medium">
-                     Sin complicaciones técnicas. Entra, vende y crece.
-                 </p>
              </div>
         </div>
 

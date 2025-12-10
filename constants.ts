@@ -3,7 +3,7 @@ import { StoreSettings } from './types';
 export const CATEGORIES = ['General', 'Bebidas', 'Alimentos', 'Limpieza', 'Electrónica', 'Hogar', 'Otros'];
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  name: 'Lumina Store',
+  name: 'PosGo! Store',
   currency: 'S/',
   taxRate: 0.18, // IGV Peru standard
   pricesIncludeTax: true,

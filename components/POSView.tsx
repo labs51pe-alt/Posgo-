@@ -128,7 +128,9 @@ export const POSView = ({ products, cart, onAddToCart, onUpdateCart, onRemoveFro
                     </div>
                 </div>
                 
+                {/* ID added for Tour */}
                 <button 
+                    id="pos-cash-control"
                     onClick={() => onOpenCashControl('IN')} 
                     className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
                 >
@@ -138,11 +140,13 @@ export const POSView = ({ products, cart, onAddToCart, onUpdateCart, onRemoveFro
 
             {/* Toolbar */}
             <div className="flex gap-4 mb-4">
-                <div className="flex gap-1 bg-white p-1.5 rounded-[1.2rem] border border-slate-100 h-[64px] items-center shrink-0 shadow-sm">
+                {/* ID added for Tour */}
+                <div id="pos-view-toggles" className="flex gap-1 bg-white p-1.5 rounded-[1.2rem] border border-slate-100 h-[64px] items-center shrink-0 shadow-sm">
                     <button onClick={() => setViewMode('GRID')} className={`h-full aspect-square flex items-center justify-center rounded-2xl transition-all ${viewMode === 'GRID' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid className="w-5 h-5"/></button>
                     <button onClick={() => setViewMode('LIST')} className={`h-full aspect-square flex items-center justify-center rounded-2xl transition-all ${viewMode === 'LIST' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-5 h-5"/></button>
                 </div>
-                <div className="flex-1 relative group">
+                {/* ID added for Tour */}
+                <div id="pos-scanner-section" className="flex-1 relative group">
                     <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                         <ScanBarcode className="w-6 h-6 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                     </div>
@@ -368,7 +372,8 @@ export const POSView = ({ products, cart, onAddToCart, onUpdateCart, onRemoveFro
                 </div>
             )}
         </div>
-        <div className="w-[400px] bg-white shadow-2xl shadow-indigo-900/10 z-20" id="pos-cart"><Cart items={cart} onUpdateQuantity={onUpdateCart} onRemoveItem={onRemoveFromCart} onUpdateDiscount={onUpdateDiscount} onCheckout={onCheckout} onClearCart={onClearCart} settings={settings} customers={customers} /></div>
+        {/* ID added for Tour */}
+        <div id="pos-cart" className="w-[400px] bg-white shadow-2xl shadow-indigo-900/10 z-20"><Cart items={cart} onUpdateQuantity={onUpdateCart} onRemoveItem={onRemoveFromCart} onUpdateDiscount={onUpdateDiscount} onCheckout={onCheckout} onClearCart={onClearCart} settings={settings} customers={customers} /></div>
     </div>
   );
 };

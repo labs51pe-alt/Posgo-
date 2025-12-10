@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
-import { Transaction, StoreSettings, CashShift, CashMovement } from '../types';
-import { Printer, X, CheckCircle } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Transaction, StoreSettings, CashShift } from '../types';
+import { Printer, X, CheckCircle, MessageCircle, Rocket, Share2, Send, Users, ArrowLeft } from 'lucide-react';
 
 interface TicketProps {
     type: 'SALE' | 'REPORT';
@@ -11,17 +11,63 @@ interface TicketProps {
 
 export const Ticket: React.FC<TicketProps> = ({ type, data, settings, onClose }) => {
     const printRef = useRef<HTMLDivElement>(null);
+    const [isWhatsAppMode, setIsWhatsAppMode] = useState(false);
+    const [whatsAppNumber, setWhatsAppNumber] = useState('');
 
     const handlePrint = () => {
         const content = printRef.current?.innerHTML;
         const printWindow = window.open('', '', 'height=600,width=400');
         if (printWindow && content) {
-            printWindow.document.write('<html><head><title>Print</title><style>body { font-family: monospace; padding: 20px; text-align: center; } .left { text-align: left; } .right { text-align: right; } .flex { display: flex; justify-content: space-between; } hr { border: 0.5px dashed #000; margin: 10px 0; } .bold { font-weight: bold; }</style></head><body>');
+            printWindow.document.write('<html><head><title>Print</title><style>body { font-family: monospace; padding: 20px; text-align: center; } .left { text-align: left; } .right { text-align: right; } .flex { display: flex; justify-content: space-between; } hr { border: 0.5px dashed #000; margin: 10px 0; } .bold { font-weight: bold; } .center { display: flex; flex-direction: column; align-items: center; } svg { width: 30px; height: 30px; margin-bottom: 5px; }</style></head><body>');
             printWindow.document.write(content);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
         }
+    };
+
+    const generateWhatsAppMessage = () => {
+        if (type !== 'SALE') return '';
+        
+        const t = data as Transaction;
+        const date = new Date(t.date).toLocaleDateString();
+        const time = new Date(t.date).toLocaleTimeString();
+        
+        let text = `🧾 *Comprobante de Pago - ${settings.name}*\n`;
+        text += `📅 Fecha: ${date} ${time}\n`;
+        text += `🆔 Ticket: #${t.id.slice(-6)}\n`;
+        text += `------------------------------\n`;
+        
+        t.items.forEach(item => {
+            text += `${item.quantity} x ${item.name}  (${settings.currency}${(item.price * item.quantity).toFixed(2)})\n`;
+        });
+        
+        text += `------------------------------\n`;
+        text += `*TOTAL: ${settings.currency}${t.total.toFixed(2)}*\n`;
+        
+        if (t.discount > 0) text += `Ahorro: ${settings.currency}${t.discount.toFixed(2)}\n`;
+        
+        text += `\n🚀 Enviado con PosGo!`;
+        return text;
+    };
+
+    const sendWhatsApp = (directNumber?: string) => {
+        const text = generateWhatsAppMessage();
+        
+        let url = '';
+        if (directNumber) {
+            // Remove non-numeric chars
+            const cleanNumber = directNumber.replace(/\D/g, '');
+            // Basic formatting: if length is 9 (Peru standard), add 51. If user typed 51..., leave it.
+            const finalNumber = cleanNumber.length === 9 ? `51${cleanNumber}` : cleanNumber;
+            url = `https://wa.me/${finalNumber}?text=${encodeURIComponent(text)}`;
+        } else {
+            // Open contact picker
+            url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        }
+            
+        window.open(url, '_blank');
+        setIsWhatsAppMode(false); // Reset mode after sending
     };
 
     const getPaymentMethodLabel = (method: string) => {
@@ -37,21 +83,29 @@ export const Ticket: React.FC<TicketProps> = ({ type, data, settings, onClose })
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-fade-in-up">
-                <div className="p-4 bg-slate-900 text-white flex justify-between items-center">
-                    <span className="font-bold flex items-center gap-2"><CheckCircle className="w-5 h-5 text-emerald-400"/> {type === 'SALE' ? 'Venta Exitosa' : 'Corte de Caja'}</span>
-                    <button onClick={onClose} className="hover:bg-white/10 p-1 rounded-full"><X className="w-5 h-5"/></button>
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-fade-in-up border border-slate-200">
+                <div className="p-5 bg-slate-900 text-white flex justify-between items-center">
+                    <span className="font-bold flex items-center gap-2 text-sm"><CheckCircle className="w-5 h-5 text-emerald-400"/> {type === 'SALE' ? 'Transacción Exitosa' : 'Corte Realizado'}</span>
+                    <button onClick={onClose} className="hover:bg-white/10 p-2 rounded-full transition-colors"><X className="w-5 h-5"/></button>
                 </div>
                 
-                <div className="p-8 overflow-y-auto max-h-[60vh] bg-slate-50 flex justify-center">
-                    <div ref={printRef} className="bg-white p-6 shadow-sm border border-slate-100 w-full text-xs font-mono leading-relaxed text-slate-800">
-                        {/* Ticket Header */}
-                        <div className="text-center mb-4">
-                            <h2 className="text-lg font-bold uppercase">{settings.name}</h2>
-                            <p>{settings.address}</p>
-                            <p>Tel: {settings.phone}</p>
-                            <p className="mt-2">{new Date(type === 'SALE' ? (data as Transaction).date : (data.shift as CashShift).endTime!).toLocaleString()}</p>
+                <div className="p-8 overflow-y-auto max-h-[55vh] bg-slate-50 flex justify-center custom-scrollbar">
+                    <div ref={printRef} className="bg-white p-6 shadow-sm border border-slate-200 w-full text-xs font-mono leading-relaxed text-slate-800 relative">
+                        {/* Cut Effect decoration */}
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMiIgaGVpZ2h0PSIxMiIgdmlld0JveD0iMCAwIDEyIDEyIj48cGF0aCBkPSJNMCA2IEw2IDAgTDEyIDZNMCA2IEw2IDEyIEwxMiA2IiBmaWxsPSIjZjFmNXY5Ii8+PC9zdmc+')] bg-repeat-x -mt-2"></div>
+                        
+                        {/* Ticket Header with Logo */}
+                        <div className="flex flex-col items-center text-center mb-6">
+                            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white mb-2 print:border print:border-black print:text-black">
+                                <Rocket className="w-6 h-6 fill-current" />
+                            </div>
+                            <h2 className="text-xl font-black uppercase tracking-tight mb-1">PosGo!</h2>
+                            <p className="font-bold text-sm uppercase">{settings.name}</p>
+                            <p className="text-slate-500">{settings.address}</p>
+                            <p className="text-slate-500">Tel: {settings.phone}</p>
+                            <p className="mt-2 border-t border-dashed border-slate-300 pt-2 w-full">{new Date(type === 'SALE' ? (data as Transaction).date : (data.shift as CashShift).endTime!).toLocaleString()}</p>
                         </div>
+                        
                         <hr className="border-dashed border-slate-300 my-4"/>
                         
                         {type === 'SALE' ? (
@@ -59,11 +113,11 @@ export const Ticket: React.FC<TicketProps> = ({ type, data, settings, onClose })
                                 <div className="space-y-2 mb-4">
                                     {(data as Transaction).items.map((item, idx) => (
                                         <div key={idx} className="flex justify-between items-start">
-                                            <div className="flex-1">
-                                                <span>{item.name}</span>
+                                            <div className="flex-1 pr-2">
+                                                <span className="font-bold">{item.name}</span>
                                                 {item.selectedVariantName && <span className="block text-[10px] text-slate-500">({item.selectedVariantName})</span>}
                                             </div>
-                                            <div className="text-right ml-4">
+                                            <div className="text-right whitespace-nowrap">
                                                 <div>{item.quantity} x {settings.currency}{item.price.toFixed(2)}</div>
                                                 <div className="font-bold">{settings.currency}{(item.quantity * item.price).toFixed(2)}</div>
                                             </div>
@@ -73,14 +127,14 @@ export const Ticket: React.FC<TicketProps> = ({ type, data, settings, onClose })
                                 <hr className="border-dashed border-slate-300 my-4"/>
                                 <div className="space-y-1 text-right">
                                     <div className="flex justify-between"><span>Subtotal</span><span>{settings.currency}{(data as Transaction).subtotal.toFixed(2)}</span></div>
-                                    {(data as Transaction).discount > 0 && <div className="flex justify-between"><span>Descuento</span><span>-{settings.currency}{(data as Transaction).discount.toFixed(2)}</span></div>}
-                                    <div className="flex justify-between text-lg font-bold mt-2"><span>Total</span><span>{settings.currency}{(data as Transaction).total.toFixed(2)}</span></div>
+                                    {(data as Transaction).discount > 0 && <div className="flex justify-between text-emerald-600 font-bold"><span>Descuento</span><span>-{settings.currency}{(data as Transaction).discount.toFixed(2)}</span></div>}
+                                    <div className="flex justify-between text-xl font-black mt-2 pt-2 border-t border-slate-200"><span>Total</span><span>{settings.currency}{(data as Transaction).total.toFixed(2)}</span></div>
                                 </div>
                                 <hr className="border-dashed border-slate-300 my-4"/>
                                 <div>
-                                    <p className="font-bold mb-1">Pagado con:</p>
+                                    <p className="font-bold mb-2 text-center uppercase text-[10px] tracking-widest text-slate-400">Método de Pago</p>
                                     {(data as Transaction).payments?.map((p, idx) => (
-                                        <div key={idx} className="flex justify-between">
+                                        <div key={idx} className="flex justify-between font-bold">
                                             <span>{getPaymentMethodLabel(p.method)}</span>
                                             <span>{settings.currency}{p.amount.toFixed(2)}</span>
                                         </div>
@@ -89,14 +143,13 @@ export const Ticket: React.FC<TicketProps> = ({ type, data, settings, onClose })
                             </>
                         ) : (
                             <>
-                                <div className="text-center font-bold mb-4">REPORTE DE TURNO</div>
-                                <div className="flex justify-between mb-2"><span>Inicio:</span><span>{new Date(data.shift.startTime).toLocaleTimeString()}</span></div>
-                                <div className="flex justify-between mb-2"><span>Fin:</span><span>{new Date(data.shift.endTime).toLocaleTimeString()}</span></div>
+                                <div className="text-center font-bold mb-4 uppercase tracking-wider">Cierre de Caja</div>
+                                <div className="flex justify-between mb-2"><span>Apertura:</span><span>{new Date(data.shift.startTime).toLocaleTimeString()}</span></div>
+                                <div className="flex justify-between mb-2"><span>Cierre:</span><span>{new Date(data.shift.endTime).toLocaleTimeString()}</span></div>
                                 <hr className="border-dashed border-slate-300 my-4"/>
                                 <div className="space-y-2">
                                     <div className="flex justify-between font-bold"><span>Fondo Inicial</span><span>{settings.currency}{data.shift.startAmount.toFixed(2)}</span></div>
                                     
-                                    {/* Calculated Totals from Transactions in Shift */}
                                     <div className="flex justify-between"><span>Ventas Efectivo</span>
                                         <span>{settings.currency}{data.transactions.reduce((acc: number, t: Transaction) => acc + (t.payments?.filter(p => p.method === 'cash').reduce((sum, p) => sum + p.amount, 0) || 0), 0).toFixed(2)}</span>
                                     </div>
@@ -104,24 +157,67 @@ export const Ticket: React.FC<TicketProps> = ({ type, data, settings, onClose })
                                         <span>{settings.currency}{data.transactions.reduce((acc: number, t: Transaction) => acc + (t.payments?.filter(p => p.method !== 'cash').reduce((sum, p) => sum + p.amount, 0) || 0), 0).toFixed(2)}</span>
                                     </div>
 
-                                    <div className="flex justify-between"><span>Entradas Caja</span><span>{settings.currency}{data.movements.filter((m:any) => m.type === 'IN').reduce((s:number, m:any) => s + m.amount, 0).toFixed(2)}</span></div>
-                                    <div className="flex justify-between"><span>Salidas Caja</span><span>-{settings.currency}{data.movements.filter((m:any) => m.type === 'OUT').reduce((s:number, m:any) => s + m.amount, 0).toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span>Entradas</span><span>{settings.currency}{data.movements.filter((m:any) => m.type === 'IN').reduce((s:number, m:any) => s + m.amount, 0).toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span>Salidas</span><span>-{settings.currency}{data.movements.filter((m:any) => m.type === 'OUT').reduce((s:number, m:any) => s + m.amount, 0).toFixed(2)}</span></div>
                                     <hr className="border-dashed border-slate-300 my-2"/>
-                                    <div className="flex justify-between font-bold text-lg"><span>Total Caja Real</span><span>{settings.currency}{data.shift.endAmount?.toFixed(2)}</span></div>
+                                    <div className="flex justify-between font-black text-lg"><span>Total Caja</span><span>{settings.currency}{data.shift.endAmount?.toFixed(2)}</span></div>
                                 </div>
                             </>
                         )}
                         
-                        <div className="mt-6 text-center text-[10px] text-slate-400">
-                            <p>¡Gracias por su preferencia!</p>
-                            <p>Ticket Generado por LuminaPOS</p>
+                        <div className="mt-8 text-center text-[10px] text-slate-400 font-medium">
+                            <p className="mb-1">¡Gracias por su preferencia!</p>
+                            <p>Powered by <strong>PosGo!</strong></p>
                         </div>
+                         {/* Cut Effect decoration bottom */}
+                         <div className="absolute bottom-0 left-0 w-full h-2 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMiIgaGVpZ2h0PSIxMiIgdmlld0JveD0iMCAwIDEyIDEyIj48cGF0aCBkPSJNMCAwIEw2IDYgTDEyIDBNMCAwIEw2IDYgTDEyIDBWMTIgSDAgVjAiIGZpbGw9IiNmMWY1djkiLz48L3N2Zz4=')] bg-repeat-x -mb-2"></div>
                     </div>
                 </div>
 
-                <div className="p-4 bg-white border-t border-slate-100 flex gap-3">
-                    <button onClick={onClose} className="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">Cerrar</button>
-                    <button onClick={handlePrint} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-colors flex items-center justify-center gap-2"><Printer className="w-4 h-4"/> Imprimir</button>
+                <div className="p-4 bg-white border-t border-slate-100 relative">
+                    {/* Normal Buttons */}
+                    {!isWhatsAppMode ? (
+                        <div className="flex gap-2 animate-fade-in">
+                            {type === 'SALE' && (
+                                <button onClick={() => setIsWhatsAppMode(true)} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-200">
+                                    <MessageCircle className="w-5 h-5"/> WhatsApp
+                                </button>
+                            )}
+                            <button onClick={handlePrint} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg">
+                                <Printer className="w-5 h-5"/> Imprimir
+                            </button>
+                        </div>
+                    ) : (
+                        // WhatsApp Input Interface
+                        <div className="animate-fade-in-up space-y-3">
+                            <div className="flex gap-2">
+                                <button onClick={() => setIsWhatsAppMode(false)} className="p-3 bg-slate-100 rounded-xl text-slate-500 hover:bg-slate-200">
+                                    <ArrowLeft className="w-5 h-5"/>
+                                </button>
+                                <input 
+                                    type="tel"
+                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 font-bold text-slate-700 outline-none focus:border-emerald-500"
+                                    placeholder="Número (ej. 999...)"
+                                    value={whatsAppNumber}
+                                    onChange={(e) => setWhatsAppNumber(e.target.value)}
+                                    autoFocus
+                                />
+                                <button 
+                                    onClick={() => sendWhatsApp(whatsAppNumber)}
+                                    disabled={whatsAppNumber.length < 9}
+                                    className="p-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-200"
+                                >
+                                    <Send className="w-5 h-5"/>
+                                </button>
+                            </div>
+                            <button 
+                                onClick={() => sendWhatsApp()} 
+                                className="w-full py-2.5 bg-white border border-emerald-200 text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 flex items-center justify-center gap-2"
+                            >
+                                <Users className="w-4 h-4"/> Seleccionar de mis contactos
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
