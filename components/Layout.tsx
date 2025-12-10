@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ViewState, StoreSettings, UserProfile } from '../types';
 import { ShoppingCart, Archive, BarChart2, ShoppingBag, LogOut, User, FileText, Settings, Rocket } from 'lucide-react';
@@ -52,8 +53,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, onChangeView, setti
           {user.role === 'admin' && (
             <>
              <div className="h-px bg-slate-200 w-1/2 mx-auto my-3 opacity-50"></div>
-             <NavItem view={ViewState.REPORTS} icon={FileText} label="Datos" colorClass="bg-blue-50 text-blue-600" />
-             <NavItem view={ViewState.ADMIN} icon={BarChart2} label="Admin" colorClass="bg-rose-50 text-rose-600" />
+             {/* RENAMED LABELS */}
+             <NavItem view={ViewState.REPORTS} icon={FileText} label="Reportes" colorClass="bg-blue-50 text-blue-600" />
+             <NavItem view={ViewState.ADMIN} icon={BarChart2} label="Dashboard" colorClass="bg-rose-50 text-rose-600" />
              <NavItem view={ViewState.SETTINGS} icon={Settings} label="Config" colorClass="bg-slate-100 text-slate-700" />
             </>
           )}

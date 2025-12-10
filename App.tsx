@@ -273,9 +273,6 @@ const App: React.FC = () => {
 
   if (!user) return <Auth onLogin={handleLogin} />;
 
-  // Admin View is no longer a wrapper for everything, but a distinct view. 
-  // However, for layout consistency, we wrap everything in Layout component.
-  
   return (
     <Layout currentView={view} onChangeView={setView} settings={settings} user={user} onLogout={handleLogout}>
         <OnboardingTour isOpen={showOnboarding} onComplete={() => setShowOnboarding(false)} />
@@ -284,6 +281,7 @@ const App: React.FC = () => {
             <POSView 
                 products={products} 
                 cart={cart} 
+                transactions={transactions} // Passed to calculate live shift sales
                 activeShift={activeShift} 
                 settings={settings} 
                 customers={customers} 
